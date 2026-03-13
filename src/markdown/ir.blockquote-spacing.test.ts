@@ -8,22 +8,13 @@
  * a single blank line (double newline `\n\n`). This is the standard paragraph
  * separation used throughout markdown.
  *
- * CORRECT behavior:
+ * Expected behavior:
  *   - Blockquote content followed by paragraph: "quote\n\nparagraph" (double \n)
  *   - Two consecutive blockquotes: "first\n\nsecond" (double \n)
  *
- * BUG (current behavior):
- *   - Produces triple newlines: "quote\n\n\nparagraph"
- *
- * Root cause:
- *   1. `paragraph_close` inside blockquote adds `\n\n` (correct)
- *   2. `blockquote_close` adds another `\n` (incorrect)
- *   3. Result: `\n\n\n` (triple newlines - incorrect)
- *
- * The fix: `blockquote_close` should NOT add `\n` because:
- *   - Blockquotes are container blocks, not leaf blocks
- *   - The inner content (paragraph, heading, etc.) already provides block separation
- *   - Container closings shouldn't add their own spacing
+ * Implementation note: Blockquotes are container blocks, not leaf blocks.
+ * The inner content (paragraph, heading, etc.) already provides block separation,
+ * so `blockquote_close` does not add additional spacing.
  */
 
 import { describe, it, expect } from "vitest";
@@ -35,8 +26,6 @@ describe("blockquote spacing", () => {
       const input = "> quote\n\nparagraph";
       const result = markdownToIR(input);
 
-      // CORRECT: "quote\n\nparagraph" (double newline)
-      // BUG: "quote\n\n\nparagraph" (triple newline)
       expect(result.text).toBe("quote\n\nparagraph");
     });
 
